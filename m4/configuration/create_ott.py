@@ -9,22 +9,26 @@ from astropy.io import fits as pyfits
 from m4.ground import object_from_fits_file_name as obj
 from m4.utils.roi import ROI
 from m4.ground.zernikeGenerator import ZernikeGenerator
-
+import numpy.ma as ma
 
 class OTT():
-    bname =conf.path_name.OPTICAL_FOLDER+'/'+conf.optical_conf
+    bname =conf.path_name.MIRROR_FOLDER+'/'+conf.mirror_conf
     fname = bname+'/m4_mech_pupil-bin2.fits'
     hduList = pyfits.open(fname)
     m4pupil = hduList[0].data
-    
-    fname = bname+'ott_mask.fits'
+    m4ima = m4pupil *0 #shall be filled with actuator commands
+    fname = bname+'/ott_mask.fits'
     hduList = pyfits.open(fname)
     mask = hduList[0].data
     ss = mask.shape
     img = np.ones(ss)
-    img = ma.masked_array(img, mask=img-mask)
-    
-    idx = np.where(mask)
+    #img = ma.masked_array(img, mask=img-mask)
+    bname =conf.path_name.OPTICAL_FOLDER+'/'+conf.optical_conf
+    fname = bname+'/ottmask.fits'
+    hduList = pyfits.open(fname)
+    m = hduList[0].data
+    parmask = ma.make_mask(m)
+    idx = np.where(m)
     m4offset = 0.
     offset = 0.
     def __init__(self):
@@ -34,7 +38,9 @@ class OTT():
         self._slide = 0
         self._rslide = 0
         self._angle = 0
-        self.start_position = np.zeros(6)
+        self.par_start_position = np.zeros(6)
+        self.m4_start_position = np.zeros(6)
+        self.refflat_start_position = np.zeros(6)
         self.smap = np.zeros((Interferometer.N_PIXEL[0], Interferometer.N_PIXEL[1]))
         self.rmap = np.zeros(((2*OttParameters.rflat_radius*OttParameters.pscale).astype(int),
                               (2*OttParameters.rflat_radius*OttParameters.pscale).astype(int)))
@@ -113,10 +119,12 @@ class OTT():
             
         '''
         if start_position is None:
-            parab = self.start_position
+            self.par_start_position = self.par_start_position
         else:
-            parab = start_position
-        return parab
+            self.par_start_position = start_position
+        
+        return self.par_start_position
+        
 
     def refflat(self, start_position=None):
         '''Function to set the start position of the reference flat
@@ -133,10 +141,13 @@ class OTT():
                         start position of the reference flat
         '''
         if start_position is None:
-            refflat = self.start_position
+            self.refflat_start_position = self.refflat_start_position
         else:
-            refflat = start_position
-        return refflat
+            self.refflat_start_position = start_position
+        
+        return self.refflat_start_position
+    
+        
 
     def m4(self, start_position=None):
         '''Function to set the start position of the deformable mirror
@@ -153,10 +164,11 @@ class OTT():
                         start position of the deformable mirror
         '''
         if start_position is None:
-            m4 = self.start_position
+            self.m4_start_position = self.m4_start_position
         else:
-            m4 = start_position
-        return m4
+            self.m4_start_position = start_position
+            
+        return self.m4_start_position
     
     
         
@@ -189,7 +201,8 @@ class OTT():
         '''
 #         conffolder = os.path.join(path_name.CONFIGURATION_ROOT_FOLDER, tnconf)
 #         file_name =  os.path.join(conffolder, 'ZST_PAR_pos2z.txt')
-        file_name = '/Users/rm/Desktop/Arcetri/M4/ProvaCodice/OTT/ZST_PAR_pos2z.txt'
+        file_name = conf.path_name.OPTICAL_FOLDER+'/'+conf.optical_conf+'/PAR_pos2z.txt'
+        #'/Users/rm/Desktop/Arcetri/M4/ProvaCodice/OTT/ZST_PAR_pos2z.txt'
         mat = self._readMatFromTxt(file_name)
         return mat
 
@@ -202,7 +215,9 @@ class OTT():
         '''
 #         conffolder = os.path.join(path_name.CONFIGURATION_ROOT_FOLDER, tnconf)
 #         file_name =  os.path.join(conffolder, 'ZST_FM_pos2z.txt')
-        file_name = '/Users/rm/Desktop/Arcetri/M4/ProvaCodice/OTT/ZST_FM_pos2z.txt'
+        #file_name = '/Users/rm/Desktop/Arcetri/M4/ProvaCodice/OTT/ZST_FM_pos2z.txt'
+        file_name = conf.path_name.OPTICAL_FOLDER+'/'+conf.optical_conf+'/M4_pos2z.txt'
+        print(file_name)
         mat = self._readMatFromTxt(file_name)
         return mat
 
@@ -215,7 +230,10 @@ class OTT():
         '''
 #         conffolder = os.path.join(path_name.CONFIGURATION_ROOT_FOLDER, tnconf)
 #         file_name =  os.path.join(conffolder, 'ZST_M4_pos2z.txt')
-        file_name = '/Users/rm/Desktop/Arcetri/M4/ProvaCodice/OTT/ZST_M4_pos2z.txt'
+        #file_name = '/Users/rm/Desktop/Arcetri/M4/ProvaCodice/OTT/M4_pos2z.txt'
+        file_name = conf.path_name.OPTICAL_FOLDER+'/'+conf.optical_conf+'/M4_pos2z.txt'
+        print(file_name)
+
         mat = self._readMatFromTxt(file_name)
         return mat
 # Zmat

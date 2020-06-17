@@ -40,6 +40,7 @@ class OttParameters():
     outarea         = 4
     fullrslide      = 0.85
     segment_angle   = 60
+    rflat_cell      = 0.01
     pscale  = Interferometer.N_PIXEL[0]/2/parab_radius
 
 
