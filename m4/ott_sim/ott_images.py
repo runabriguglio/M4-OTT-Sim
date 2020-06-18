@@ -5,16 +5,18 @@ Created on Thu May 21 18:06:09 2020
 @author: Runa
 """
 """
-
+The module creates simulated image of the OTT elements (M4, refmirror and parabola) according to the current OTT configuration.
+Input (loaded from create_ott) is sensitivity matrices for the various elements (from Zemax) and mechanical dimensions of items
+pixel scale is selected to have output images of 512,512
 """
 import numpy as np
 from m4.configuration import start
 ott = start.create_ott()
 from m4.configuration.ott_parameters import *
 import geo
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
-def ott_smap(offset=None, quant=None):
+def ott_smap(offset=None, quant=None, show=0):
     npix = Interferometer.N_PIXEL
     pmap    = ott_parab_ima()
     m4map,m4smask   =  ott_m4_ima()
@@ -79,15 +81,18 @@ def ott_smap(offset=None, quant=None):
         loadct, 3,/silent
       endif
   endif
-"""   
-    plt.imshow(smap1, cmap='hot');plt.colorbar()    
+""" 
+    if (show != 0):
+        plt.clf()    
+        plt.imshow(smap1, cmap='hot')
+        plt.colorbar()    
     return(smap1, smask)
     
 def pwrap(img):
     wav = Interferometer.WAVEL
     img1 = img.copy()
     optfact = 1
-    img1[img1 != 0] = np.sin(2*!pi*img1[img1 != 0]*optfact/(wav))
+    img1[img1 != 0] = np.sin(2*np.pi*img1[img1 != 0]*optfact/(wav))
     return(img1)    
     
 def ott_parab_ima():
@@ -174,3 +179,24 @@ def ott_map2ima(w):   #debugged
     y1=y1.astype(int)
     simg    = simg[x0:x1+1, y0:y1+1]
     return(simg)
+    
+    
+def ott_view():
+    #pixscale = 200. #pix/m
+    #parod   = 1.44
+    #rmod   = 0.6
+    m4 = ott.m4pupil.copy()
+    pixscale=OttParameters.PIXEL_SCALE
+    parxy = [ott.slide()*pixscale,0]
+    refmxy = [ott.rslide()*pixscale, 0]
+    ang = ott.angle()*np.pi/180
+    rmat = np.array([[np.cos(ang),np.sin(ang)],[-np.sin(ang), np.cos(ang)]])
+    parxy = rmat.dot(parxy) 
+    refmxy = rmat.dot(refmxy) 
+    ss = np.array(np.shape(m4))
+    m4c = (ss-1)/2
+    parcircle = geo.draw_mask(m4*0, parxy[0]+m4c[0],parxy[1]+m4c[1],OttParameters.parab_radius*pixscale)
+    refmcircle = geo.draw_mask(m4*0, refmxy[0]+m4c[0],refmxy[1]+m4c[1],OttParameters.rflat_radius*pixscale)
+    ottimg=m4+parcircle+refmcircle
+    
+    return(ottimg)
