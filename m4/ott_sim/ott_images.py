@@ -35,8 +35,7 @@ def ott_smap(offset=None, quant=None, show=0):
         #fullmask            = maskm+maskr
         #fullmask[np.where(fullmask)]  = 1
         #fullmask[idc]                   = 0
-   
-   
+      
     rmap = (rmap + pmap)*rmask
     romask = geo.draw_mask(ott.mask*0, npix[0]/2,npix[1]/2+roffset,OttParameters.rflat_radius*OttParameters.pscale-OttParameters.rflat_cell*OttParameters.pscale)
     romask = romask+rmask
@@ -112,7 +111,7 @@ def ott_parab_ima():
 def ott_rflat_ima( deshape=0):
     npix = Interferometer.N_PIXEL
     pscale = OttParameters.pscale
-    rmap    = ott.smap
+    rmap    = ott.smap.copy()
     roffset = (ott.rslide()-ott.slide())*pscale
     rflat_radius = OttParameters.rflat_radius
     if abs(roffset)-rflat_radius*pscale <  npix[1]/2 :
@@ -189,7 +188,7 @@ def ott_view():
     pixscale=OttParameters.PIXEL_SCALE
     parxy = [ott.slide()*pixscale,0]
     refmxy = [ott.rslide()*pixscale, 0]
-    ang = ott.angle()*np.pi/180
+    ang = (-30-ott.angle())*np.pi/180
     rmat = np.array([[np.cos(ang),np.sin(ang)],[-np.sin(ang), np.cos(ang)]])
     parxy = rmat.dot(parxy) 
     refmxy = rmat.dot(refmxy) 
