@@ -16,7 +16,7 @@ class OTT():
     fname = bname+'/m4_mech_pupil-bin2.fits'
     hduList = pyfits.open(fname)
     m4pupil = hduList[0].data
-    m4ima = m4pupil *0 #shall be filled with actuator commands
+    m4ima = (m4pupil *0).astype(float) #shall be filled with actuator commands
     fname = bname+'/ott_mask.fits'
     hduList = pyfits.open(fname)
     mask = hduList[0].data
@@ -31,6 +31,25 @@ class OTT():
     idx = np.where(m)
     m4offset = 0.
     offset = 0.
+    
+    bname =conf.path_name.MIRROR_FOLDER+'/'+conf.mirror_conf
+    fname = bname+'/py-sect4-mask.fits'
+    hduList = pyfits.open(fname)
+    m = hduList[0].data
+    segmask1 = ma.make_mask(m)
+    
+    bname =conf.path_name.MIRROR_FOLDER+'/'+conf.mirror_conf
+    fname = bname+'/if_sect4_rot-bin2.fits'
+    hduList = pyfits.open(fname)
+    ifmat = hduList[0].data
+    s1 = segmask1.copy()
+    s1=s1.astype(float)
+    
+    bname =conf.path_name.MIRROR_FOLDER+'/'+conf.mirror_conf
+    fname = bname+'/ff_v_matrix.fits'
+    hduList = pyfits.open(fname)
+    vmat = hduList[0].data
+    
     def __init__(self):
         """The constructor """
         self._r = ROI()
