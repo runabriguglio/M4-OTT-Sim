@@ -83,15 +83,20 @@ def ott_smap(offset=None, quant=None, show=0):
 """ 
     if (show != 0):
         plt.clf()    
-        plt.imshow(smap1, cmap='hot')
-        plt.colorbar()    
+        plt.subplot(131)
+        plt.imshow(ott_view())
+        plt.subplot(132)
+        plt.imshow(smap1, cmap='hot');  plt.colorbar()
+        plt.subplot(133)
+        plt.imshow(pwrap(smap1, smask), cmap='gray')
+
     return(smap1, smask)
     
-def pwrap(img):
+def pwrap(img, mask):
     wav = Interferometer.WAVEL
     img1 = img.copy()
     optfact = 1
-    img1[img1 != 0] = np.sin(2*np.pi*img1[img1 != 0]*optfact/(wav))
+    img1[mask != 0] = np.sin(2*np.pi*img1[mask != 0]*optfact/(wav))
     return(img1)    
     
 def ott_parab_ima():
@@ -165,7 +170,7 @@ def ott_map2ima(w):   #debugged
     theta   = ott.angle()*np.pi/180.
     rmat    = [[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]]
     ss      = w.shape
-    theangle = -30.-ott.angle()
+    theangle = -ott.angle()
     simg    = geo.rotate(w, theangle)
     parxy   = ott.slide() * OttParameters.pscale
     x0      = np.fix(ss[0]/2-npix[0]/2)
@@ -180,7 +185,7 @@ def ott_map2ima(w):   #debugged
     return(simg)
     
     
-def ott_view():
+def ott_view(show=None):
     #pixscale = 200. #pix/m
     #parod   = 1.44
     #rmod   = 0.6
@@ -197,5 +202,7 @@ def ott_view():
     parcircle = geo.draw_mask(m4*0, parxy[0]+m4c[0],parxy[1]+m4c[1],OttParameters.parab_radius*pixscale)
     refmcircle = geo.draw_mask(m4*0, refmxy[0]+m4c[0],refmxy[1]+m4c[1],OttParameters.rflat_radius*pixscale)
     ottimg=m4+parcircle+refmcircle
-    
+    if show != None:
+        plt.imshow(ottimg)
+        
     return(ottimg)

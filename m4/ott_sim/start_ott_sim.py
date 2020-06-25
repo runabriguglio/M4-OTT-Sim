@@ -27,12 +27,15 @@ ott=start.create_ott()
 from m4.ott_sim.ott_images import *
 from m4.utils.Interface_4d import comm4d
 #test
-plt.imshow(ott.mask)
-
 
 
 ott.slide(0.75)
-ott.angle(30.)
+ott.angle(60.)
+ott.m4([0,0,0,1e-6,1e-6,0])
+plt.imshow(ott_view())
+p,m=ott_smap(show=1)
+
+
 ott.rslide(0.3)
 ott.parab([0,0,1e-5,0,0,0])
 ott.m4([0,0,0,1e-6,0,0])
@@ -40,8 +43,33 @@ ott.refflat([0,0,0,0,1e-6,0])
 
 
 p,m = comm4d.acq4d(1,show=1)
+w=ott_view()
 #which is a call to the simulated interf. acquisition
 p,m=ott_smap(show=1)
 
 
+a=np.array([20,20])
+b=geo.draw_mask(a,10,10,10)
+plt.imshow(b)
 
+
+bname =conf.path_name.MIRROR_FOLDER+'/'+conf.mirror_conf
+fname = bname+'/py-sect4-mask.fits'
+hduList = pyfits.open(fname)
+m = hduList[0].data
+segmask1 = ma.make_mask(m)
+
+bname =conf.path_name.MIRROR_FOLDER+'/'+conf.mirror_conf
+fname = bname+'/if_sect4_rot-bin2.fits'
+hduList = pyfits.open(fname)
+ifmat = hduList[0].data
+
+ s1 = segmask1.copy()
+ s1=s1.astype(float)
+ b[segmask1 == True]=ifmat[3,:]  #if zonale
+ 
+ comm  = np.dot(ott.ifmat.T,ott.vmat[:,3]) #ifmodale
+ s1 = segmask1.copy()
+ s1=s1.astype(float)
+ s1[segmask1 == True]=comm
+ plt.imshow(s1)
